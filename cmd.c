@@ -73,7 +73,15 @@ void do_bg(char **argv) {
 
 /* waitfg - Block until process pid is no longer the foreground process */
 void waitfg(pid_t pid) {
-    printf("waitfg : To be implemented\n");
+    if(verbose)
+        printf("execute waitfg");
+
+    while(pid == jobs_fgpid()){
+        sleep(1);
+    }
+
+    if(verbose)
+        printf("end waitfg");
 
     return;
 }
@@ -94,8 +102,18 @@ void do_stop(char **argv) {
 
 /* do_kill - Execute the builtin kill command */
 void do_kill(char **argv) {
-    printf("do_kill : To be implemented\n");
+    if(verbose)
+        printf("execute do_kill\n");  
 
+    /*job_t job = treat_argv(argv);
+
+    if(job.jb_state == BG){
+
+    }
+
+*/
+    if(verbose)
+        printf("end do_kill\n");
     return;
 }
 
