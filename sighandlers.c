@@ -22,7 +22,7 @@ int sigaction_wrapper(int signum, handler_t * handler) {
         printf("sigaction_wrapper: entering\n");
     
     sa.sa_handler = handler;
-    sa.sa_flags = 0;
+    sa.sa_flags = SA_RESTART;
     sigemptyset(&sa.sa_mask);
     sigaction(signum, &sa, NULL);
 
