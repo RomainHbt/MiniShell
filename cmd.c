@@ -33,7 +33,7 @@ void do_help() {
 }
 
 /* treat_argv - Determine pid or jobid and return the associated job structure */
-struct job_t *treat_argv(char **argv) {
+struct job_t * treat_argv(char **argv) {
     struct job_t *jobp = NULL;
 
     /* Ignore command if no argument */
@@ -74,14 +74,14 @@ void do_bg(char **argv) {
 /* waitfg - Block until process pid is no longer the foreground process */
 void waitfg(pid_t pid) {
     if(verbose)
-        printf("execute waitfg");
+        printf("execute waitfg\n");
 
     while(pid == jobs_fgpid()){
         sleep(1);
     }
 
     if(verbose)
-        printf("end waitfg");
+        printf("end waitfg\n");
 
     return;
 }
@@ -105,13 +105,12 @@ void do_kill(char **argv) {
     if(verbose)
         printf("execute do_kill\n");  
 
-    /*job_t job = treat_argv(argv);
+    job_t job = treat_argv(argv);
 
     if(job.jb_state == BG){
 
     }
 
-*/
     if(verbose)
         printf("end do_kill\n");
     return;
