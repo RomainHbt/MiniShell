@@ -98,7 +98,19 @@ void waitfg(pid_t pid) {
 
 /* do_fg - Execute the builtin fg command */
 void do_fg(char **argv) {
-    printf("do_fg : To be implemented\n");
+    struct job_t * job = NULL;
+    if(verbose)
+        printf("execute do_bg\n");
+
+    job = treat_argv(argv);
+
+    job->jb_state = FG;
+    kill(job->jb_pid, SIGCONT);
+
+    waitfg(job->jb_pid);
+
+    if(verbose)
+        printf("end do_bg\n");
 
     return;
 }
