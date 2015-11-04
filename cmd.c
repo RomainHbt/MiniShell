@@ -102,14 +102,17 @@ void do_stop(char **argv) {
 
 /* do_kill - Execute the builtin kill command */
 void do_kill(char **argv) {
+    struct job_t * job;
+
     if(verbose)
-        printf("execute do_kill\n");  
+        printf("execute do_kill\n");
 
-    job_t job = treat_argv(argv);
 
-    if(job.jb_state == BG){
+    job = treat_argv(argv);
 
-    }
+    
+    kill(job->jb_pid, SIGKILL);
+    
 
     if(verbose)
         printf("end do_kill\n");
