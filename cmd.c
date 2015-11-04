@@ -66,7 +66,17 @@ struct job_t * treat_argv(char **argv) {
 
 /* do_bg - Execute the builtin bg command */
 void do_bg(char **argv) {
-    printf("do_bg : To be implemented\n");
+    struct job_t * job = NULL;
+    if(verbose)
+        printf("execute do_bg\n");
+
+    job = treat_argv(argv);
+
+    job->jb_state = BG;
+    kill(job->jb_pid, SIGCONT);
+
+    if(verbose)
+        printf("end do_bg\n");
 
     return;
 }
@@ -102,7 +112,7 @@ void do_stop(char **argv) {
 
 /* do_kill - Execute the builtin kill command */
 void do_kill(char **argv) {
-    struct job_t * job;
+    struct job_t * job = NULL;
 
     if(verbose)
         printf("execute do_kill\n");
