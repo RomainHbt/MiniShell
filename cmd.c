@@ -73,7 +73,7 @@ void do_bg(char **argv) {
     job = treat_argv(argv);
 
     job->jb_state = BG;
-    kill(job->jb_pid, SIGCONT);
+    kill(-(job->jb_pid), SIGCONT);
 
     if(verbose)
         printf("end do_bg\n");
@@ -105,7 +105,7 @@ void do_fg(char **argv) {
     job = treat_argv(argv);
 
     job->jb_state = FG;
-    kill(job->jb_pid, SIGCONT);
+    kill(-(job->jb_pid), SIGCONT);
 
     waitfg(job->jb_pid);
 
@@ -133,7 +133,7 @@ void do_kill(char **argv) {
     job = treat_argv(argv);
 
     
-    kill(job->jb_pid, SIGKILL);
+    kill(-(job->jb_pid), SIGKILL);
     
 
     if(verbose)

@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <errno.h>
-
+#include <unistd.h>
 
 #include "jobs.h"
 #include "common.h"
@@ -44,12 +44,25 @@ void sigchld_handler(int sig) {
         printf("sigchld_handler: entering\n");
 
     while((pid = waitpid(-1, &status, WUNTRACED|WNOHANG)) > 0){
+        if (verbose){
+            if(WIFEXITED(status)){
+                printf("Fils terminé. PID : %d \tStatus : %d\n", pid, status);
+            }
+            if(WIFSIGNALED(status)){
+                printf("Fils terminé. PID : %d \tSignal reçu : %d\n", pid, WTERMSIG(status));
+            }
+            if(WIFSTOPPED(status)){
+                printf("Fils stoppé. PID : %d \tStatus : %d\n", pid, status);
+            }
+        }
         if(WIFEXITED(status) || WIFSIGNALED(status)){
             jobs_deletejob(pid);
         } else if(WIFSTOPPED(status)){
             struct job_t *job;
             job = jobs_getjobpid(pid);
-            job->jb_state = ST;
+            if(job != NULL){
+                job->jb_state = ST;
+            }
         }
     }
 
@@ -71,9 +84,7 @@ void sigint_handler(int sig) {
         printf("sigint_handler: entering\n");
 
     pid = jobs_fgpid();
-    if(pid > 0){
-        kill(pid, SIGINT);
-    }
+    kill(-pid, SIGINT);
 
     if (verbose)
         printf("sigint_handler: exiting\n");
@@ -93,9 +104,7 @@ void sigtstp_handler(int sig) {
         printf("sigtstp_handler: entering\n");
 
     pid = jobs_fgpid();
-    if(pid > 0){
-        kill(pid, SIGTSTP);
-    }
+    kill(-pid, SIGTSTP);
 
     if (verbose)
         printf("sigtstp_handler: exiting\n");

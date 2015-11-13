@@ -7,6 +7,8 @@
 #include <sys/wait.h>
 
 #include "pipe.h"
+#include "jobs.h"
+#include "cmd.h"
 
 void do_pipe(char *cmds[MAXCMDS][MAXARGS], int nbcmd, int bg) {
 	int fds[2];
@@ -33,6 +35,7 @@ void do_pipe(char *cmds[MAXCMDS][MAXARGS], int nbcmd, int bg) {
     		case 0:
     			/* FILS */
     			if (verbose) printf("Commande 1\n");
+    			setpgid(0,0);
 	    		erreur = dup2(fds[1], STDOUT_FILENO);
 	    		if(erreur == -1){
 	    			perror("dup2");
@@ -51,6 +54,7 @@ void do_pipe(char *cmds[MAXCMDS][MAXARGS], int nbcmd, int bg) {
     		case 0:
     			/* FILS */
     			if (verbose) printf("Commande 2\n");
+    			setpgid(0, pid);
 	    		erreur = dup2(fds[0], STDIN_FILENO);
 	    		if(erreur == -1){
 	    			perror("dup2");
@@ -64,8 +68,18 @@ void do_pipe(char *cmds[MAXCMDS][MAXARGS], int nbcmd, int bg) {
 
     	close(fds[0]);
 	    close(fds[1]);
-	    wait(NULL);
-	    wait(NULL);
+
+	    if(bg){
+	    	/* Arrière-plan */
+	    	jobs_addjob(pid, BG, cmds[0][0]);
+	    } else {
+	    	/* Avant-plan */
+	    	jobs_addjob(pid, FG, cmds[0][0]);
+	    	waitfg(pid);
+	    }
+	    
+
+    } else if(nbcmd == 3) {
 
     } else {
     	printf("pipe : To be implemented\n");
