@@ -117,7 +117,14 @@ void do_fg(char **argv) {
 
 /* do_stop - Execute the builtin stop command */
 void do_stop(char **argv) {
-    printf("do_stop : To be implemented\n");
+    struct job_t * job = NULL;
+
+    if(verbose)
+        printf("execute do_stop\n");
+
+    job = treat_argv(argv);
+
+    kill(-(job->jb_pid), SIGTSTP);
 
     return;
 }
@@ -129,9 +136,7 @@ void do_kill(char **argv) {
     if(verbose)
         printf("execute do_kill\n");
 
-
     job = treat_argv(argv);
-
     
     kill(-(job->jb_pid), SIGKILL);
     
@@ -143,14 +148,20 @@ void do_kill(char **argv) {
 
 /* do_exit - Execute the builtin exit command */
 void do_exit() {
-    printf("do_exit : To be implemented\n");
+    if(verbose)
+        printf("execute do_exit\n");
 
+    exit(EXIT_SUCCESS);
     return;
 }
 
 /* do_jobs - Execute the builtin fg command */
 void do_jobs() {
-    printf("do_jobs : To be implemented\n");
+
+    if(verbose)
+        printf("execute do_jobs\n");
+    
+    jobs_listjobs();
 
     return;
 }
