@@ -15,6 +15,8 @@ void do_pipe(char *cmds[MAXCMDS][MAXARGS], int nbcmd, int bg) {
 	int pid;
 	int erreur;
 
+    int nbCmdEffectuees, tubeEntree, tubeSortie;
+
     if (verbose)
         printf("do_pipe: entering\n");
     
@@ -152,33 +154,107 @@ void do_pipe(char *cmds[MAXCMDS][MAXARGS], int nbcmd, int bg) {
         close(fds[1][1]);
 
     } else {
-        for (int i = 0; i < nbcmd; ++i) {
-            if(i == 0){
-                /* Première commande */
-                switch((pid = fork())){
-                    case -1 :
-                        perror("fork");
-                        exit(EXIT_FAILURE);
-                    case 0:
-                        /* FILS */
-                        if (verbose) printf("Commande %d\n", i);
-                        setpgid(0,0);
-                        erreur = dup2(fds[0][1], STDOUT_FILENO);
-                        if(erreur == -1){
-                            perror("dup2");
-                            exit(EXIT_FAILURE);
-                        }
-                        close(fds[0][0]);
-                        close(fds[0][1]);
-                        execvp(cmds[0][0], cmds[0]);
-                        exit(EXIT_FAILURE);
-                }
-            } else if (i == nbcmd-1){
-                /* Dernière commande */
-            } else {
-                /* Autre commande */
-            }
+        nbCmdEffectuees = 0;
+
+        /* Premiere commande */
+        erreur = pipe(fds[0]);
+        if(erreur != 0){
+            perror("pipe");
+            exit(EXIT_FAILURE);
         }
+
+        switch((pid = fork())){
+            case -1 :
+                perror("fork");
+                exit(EXIT_FAILURE);
+            case 0:
+                /* FILS */
+                if (verbose) printf("Commande 1\n");
+                setpgid(0,0);
+                erreur = dup2(fds[0][1], STDOUT_FILENO);
+                if(erreur == -1){
+                    perror("dup2");
+                    exit(EXIT_FAILURE);
+                }
+                close(fds[0][0]);
+                close(fds[0][1]);
+                execvp(cmds[0][0], cmds[0]);
+                exit(EXIT_FAILURE);
+        }
+
+        nbCmdEffectuees++;
+
+        erreur = pipe(fds[1]);
+        if(erreur != 0){
+            perror("pipe");
+            exit(EXIT_FAILURE);
+        }
+
+        /* Commandes intermédiaire */
+        while(nbCmdEffectuees < nbcmd-1){
+            tubeEntree = 1 - (nbCmdEffectuees % 2);
+            tubeSortie = 1 - tubeEntree;
+
+            switch(fork()){
+                case -1 :
+                    perror("fork");
+                    exit(EXIT_FAILURE);
+                case 0:
+                    /* FILS */
+                    if (verbose) printf("Commande %d\nTube entrée : %d\tTube sortie : %d\n", nbCmdEffectuees+1, tubeEntree, tubeSortie);
+                    setpgid(0, pid);
+
+                    erreur = dup2(fds[tubeEntree][0], STDIN_FILENO);
+                    if(erreur == -1){
+                        perror("dup2 entree");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    erreur = dup2(fds[tubeSortie][1], STDOUT_FILENO);
+                    if(erreur == -1){
+                        perror("dup2 sortie");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    close(fds[tubeEntree][0]);
+                    close(fds[tubeEntree][1]);
+                    close(fds[tubeSortie][0]);
+                    close(fds[tubeSortie][1]);
+                    execvp(cmds[nbCmdEffectuees][0], cmds[nbCmdEffectuees]);
+                    exit(EXIT_FAILURE);
+            }
+
+            nbCmdEffectuees++;
+        }
+
+
+        /* Dernière commande */
+        tubeEntree = 1 - (nbCmdEffectuees % 2);
+
+        switch(fork()){
+            case -1 :
+                perror("fork");
+                exit(EXIT_FAILURE);
+            case 0:
+                /* FILS */
+                if (verbose) printf("Dernière Commande (%d)\nTube entrée : %d\n", nbCmdEffectuees+1, tubeEntree);
+                setpgid(0, pid);
+                erreur = dup2(fds[tubeEntree][0], STDIN_FILENO);
+                if(erreur == -1){
+                    perror("dup2");
+                    exit(EXIT_FAILURE);
+                }
+                close(fds[tubeEntree][0]);
+                close(fds[tubeEntree][1]);
+                execvp(cmds[nbCmdEffectuees][0], cmds[nbCmdEffectuees]);
+                exit(EXIT_FAILURE);
+        }
+
+        close(fds[tubeSortie][0]);
+        close(fds[tubeSortie][1]);
+        close(fds[tubeEntree][0]);
+        close(fds[tubeEntree][1]);
+
     }
 
     if(bg){
